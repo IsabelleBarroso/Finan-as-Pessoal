@@ -221,6 +221,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <!-- PLANO -->
     <div class="scr" id="s-plano">
       <div class="pt"></div>
+      <div class="shead" style="margin-top:0"><div class="stit">📌 Compromissos Fixos do Mês</div></div>
+      <div class="card" style="margin-bottom:10px">
+        <div class="ctit">Marque conforme pagar — poupanças incluídas!</div>
+        <div id="complist"></div>
+      </div>
+
       <div class="card" style="background:linear-gradient(135deg,#0d1a0d,#1a2e1a);border-color:#1a4d2e;margin-bottom:10px">
         <div class="ctit" style="color:#6ee7b7">💡 Plano com Empréstimo R$6.000</div>
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
@@ -257,19 +263,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         </div>
       </div>
 
-      <div class="shead"><div class="stit">🏦 Poupança</div><div class="slink" onclick="openM('poup')">+ Depositar</div></div>
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;color:var(--text2)">Total guardado</span>
-          <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green)" id="poup-total">R$ 0,00</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="font-size:13px;color:var(--text2)">Escritório (próx: R$<span id="pesc-prox">200</span>)</span>
-          <span style="font-family:'Syne',sans-serif;font-size:13px;color:var(--purple)" id="pesc-tot">R$0</span>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-size:13px;color:var(--text2)">Casal (próx: R$<span id="pcas-prox">200</span>)</span>
-          <span style="font-family:'Syne',sans-serif;font-size:13px;color:var(--purple2)" id="pcas-tot">R$0</span>
+      <div class="shead" style="margin-top:0"><div class="stit">🏦 Poupanças</div><div class="slink" onclick="openM('poup')">+ Depositar</div></div>
+      <div class="card" style="background:linear-gradient(135deg,#0d1a0d,#1a2e1a);border-color:#1a4d2e;margin-bottom:10px">
+        <div class="slabel" style="color:#6ee7b7">Total guardado</div>
+        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--green);margin-bottom:14px" id="poup-total">R$ 0,00</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
+            <div><div style="font-size:10px;color:#6ee7b7;font-weight:600">🏢 ESCRITÓRIO</div><div style="font-size:11px;color:var(--text2);margin-top:1px">Próx. depósito: R$<span id="pesc-prox">200</span></div></div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--green)" id="pesc-tot">R$0</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
+            <div><div style="font-size:10px;color:#a78bfa;font-weight:600">💑 CASAL</div><div style="font-size:11px;color:var(--text2);margin-top:1px">Próx. depósito: R$<span id="pcas-prox">200</span></div></div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--purple)" id="pcas-tot">R$0</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 12px">
+            <div><div style="font-size:10px;color:#fbbf24;font-weight:600">👤 PESSOAL</div><div style="font-size:11px;color:var(--text2);margin-top:1px">Sem progressão fixa</div></div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--yellow)" id="ppes-tot">R$0</div>
+          </div>
         </div>
       </div>
       <div id="pouplist"></div>
@@ -293,13 +303,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 <script>
 let S = {
   tx:[],assinaturas:[],dividas:[],poupancas:[],
-  poup_esc:0,poup_cas:0,pesc_prox:200,pcas_prox:200,
+  poup_esc:400,poup_cas:400,poup_pes:522.11,
+  pesc_prox:200,pcas_prox:200,
   plano:[
     {id:'p1',nome:'Quitar Carnê Renner',val:191,lib:191,feito:false},
     {id:'p2',nome:'Quitar Roupa de Cama Nubank Mãe',val:103,lib:51,feito:false},
     {id:'p3',nome:'Quitar Empréstimo Renner (4x)',val:1508,lib:377,feito:false},
     {id:'p4',nome:'Quitar parcelas menores no BB',val:1798,lib:788,feito:false},
     {id:'p5',nome:'Reserva de emergência',val:2400,lib:0,feito:false},
+  ],
+  compromissos:[
+    {id:'c1',nome:'💳 Empréstimo BB atual',val:500,pago:false},
+    {id:'c2',nome:'🦷 Dentista BB Mãe',val:500,pago:false},
+    {id:'c3',nome:'🛒 Shopee (11x)',val:180,pago:false},
+    {id:'c4',nome:'🛏️ Cama Nubank Mãe (6x)',val:237,pago:false},
+    {id:'c5',nome:'🏢 Poupança Escritório',val:200,pago:false},
+    {id:'c6',nome:'💑 Poupança Casal',val:200,pago:false},
   ]
 };
 
@@ -312,9 +331,10 @@ const METAS={
   'Vestuário':{meta:150,color:'#fb923c',emoji:'👗'},
   'Salão':{meta:150,color:'#f472b6',emoji:'💇'},
   'Cosméticos':{meta:150,color:'#e879f9',emoji:'💄'},
+  'Lazer':{meta:150,color:'#06b6d4',emoji:'🎬'},
   'Outros':{meta:200,color:'#64748b',emoji:'📦'},
 };
-const CATS_D=['Restaurantes/iFood','Supermercado/Mercado','Transporte','Saúde/Farmácia','Serviços/Assinaturas','Vestuário','Salão','Cosméticos','Outros'];
+const CATS_D=['Restaurantes/iFood','Supermercado/Mercado','Transporte','Saúde/Farmácia','Serviços/Assinaturas','Vestuário','Salão','Cosméticos','Lazer','Outros'];
 const CATS_R=['Salário','Renda Extra','Outros'];
 
 function uid(){return Date.now()+'_'+Math.random().toString(36).slice(2)}
@@ -446,6 +466,7 @@ function renderContas(){
 }
 
 function renderPlano(){
+  renderCompromissos();
   let usado=0,lib=0;
   S.plano.forEach(p=>{if(!p.feito){usado+=p.val;if(p.lib)lib+=p.lib;}else{lib+=p.lib||0;}});
   const res=6000-S.plano.filter(p=>p.feito).reduce((a,p)=>a+p.val,0);
@@ -462,22 +483,55 @@ function renderPlano(){
       </div>
     </div>`).join('');
 
-  const pesc=S.poupancas.filter(p=>p.tipo==='esc').reduce((a,p)=>a+p.val,0);
-  const pcas=S.poupancas.filter(p=>p.tipo==='cas').reduce((a,p)=>a+p.val,0);
-  document.getElementById('poup-total').textContent=fBRL(pesc+pcas);
+  const pesc=S.poupancas.filter(p=>p.tipo==='esc').reduce((a,p)=>a+p.val,0)+S.poup_esc;
+  const pcas=S.poupancas.filter(p=>p.tipo==='cas').reduce((a,p)=>a+p.val,0)+S.poup_cas;
+  const ppes=S.poupancas.filter(p=>p.tipo==='pes').reduce((a,p)=>a+p.val,0)+S.poup_pes;
+  document.getElementById('poup-total').textContent=fBRL(pesc+pcas+ppes);
   document.getElementById('pesc-tot').textContent=fBRL(pesc);
   document.getElementById('pcas-tot').textContent=fBRL(pcas);
+  document.getElementById('ppes-tot').textContent=fBRL(ppes);
   document.getElementById('pesc-prox').textContent=S.pesc_prox;
   document.getElementById('pcas-prox').textContent=S.pcas_prox;
 
   const pl=document.getElementById('pouplist');
-  const list=[...S.poupancas].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,6);
-  pl.innerHTML=list.length?list.map(p=>`<div class="csm" style="display:flex;align-items:center;gap:10px"><div style="font-size:22px">${p.tipo==='esc'?'🏢':'💑'}</div><div style="flex:1"><div style="font-size:14px;font-weight:600">${p.tipo==='esc'?'Poupança Escritório':'Poupança Casal'}</div><div style="font-size:11px;color:var(--text2)">${fDate(p.data)}</div></div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--green)">+${fS(p.val)}</div><button class="delbtn" onclick="delPoup('${p.id}')">🗑</button></div>`).join(''):`<div class="empty"><div class="ei">🏦</div><p>Nenhum depósito ainda.</p></div>`;
+  const list=[...S.poupancas].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,8);
+  const tipoLabel={'esc':'🏢 Escritório','cas':'💑 Casal','pes':'👤 Pessoal'};
+  const tipoColor={'esc':'var(--green)','cas':'var(--purple)','pes':'var(--yellow)'};
+  pl.innerHTML=list.length?list.map(p=>`<div class="csm" style="display:flex;align-items:center;gap:10px"><div style="font-size:22px">${p.tipo==='esc'?'🏢':p.tipo==='cas'?'💑':'👤'}</div><div style="flex:1"><div style="font-size:14px;font-weight:600">${tipoLabel[p.tipo]||p.tipo}</div><div style="font-size:11px;color:var(--text2)">${fDate(p.data)}</div></div><div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:${tipoColor[p.tipo]||'var(--green)'}">+${fS(p.val)}</div><button class="delbtn" onclick="delPoup('${p.id}')">🗑</button></div>`).join(''):`<div class="empty"><div class="ei">🏦</div><p>Nenhum depósito registrado ainda.</p></div>`;
 }
 
 const renders={inicio:renderInicio,gastos:renderGastos,graficos:renderGraficos,contas:renderContas,plano:renderPlano};
 
-function togglePlano(id){
+function renderCompromissos(){
+  const total=S.compromissos.reduce((a,c)=>a+c.val,0);
+  const pago=S.compromissos.filter(c=>c.pago).reduce((a,c)=>a+c.val,0);
+  const falta=total-pago;
+  document.getElementById('complist').innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bor)">
+      <span style="font-size:12px;color:var(--text2)">Total: <strong style="color:var(--text)">${fBRL(total)}</strong></span>
+      <span style="font-size:12px;color:var(--text2)">Pago: <strong style="color:var(--green)">${fBRL(pago)}</strong></span>
+      <span style="font-size:12px;color:var(--text2)">Falta: <strong style="color:var(--red)">${fBRL(falta)}</strong></span>
+    </div>
+    ${S.compromissos.map(c=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bor);opacity:${c.pago?0.6:1}">
+      <div style="font-size:22px;cursor:pointer" onclick="toggleComp('${c.id}')">${c.pago?'✅':'⬜'}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;${c.pago?'text-decoration:line-through;color:var(--text2)':''}">${c.nome}</div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:${c.pago?'var(--green)':'var(--yellow)'}">${fBRL(c.val)}</div>
+    </div>`).join('')}`;
+}
+
+function toggleComp(id){
+  const c=S.compromissos.find(c=>c.id===id);
+  if(c){
+    c.pago=!c.pago;
+    // Se for poupança, registra automaticamente
+    if(c.id==='c5'&&c.pago){S.poupancas.push({id:uid(),tipo:'esc',val:S.pesc_prox,data:today()});S.pesc_prox=Math.min(S.pesc_prox+40,500);}
+    if(c.id==='c6'&&c.pago){S.poupancas.push({id:uid(),tipo:'cas',val:S.pcas_prox,data:today()});S.pcas_prox=Math.min(S.pcas_prox+40,500);}
+    save();renderPlano();
+  }
+}
   const p=S.plano.find(p=>p.id===id);
   if(p){p.feito=!p.feito;save();renderPlano();}
 }
@@ -498,7 +552,7 @@ function openM(type){
     <button class="btn bp" onclick="saveTx()">✓ Salvar Lançamento</button>`;
   } else if(type==='poup'){
     mc.innerHTML=`<div class="mt">💰 Registrar Poupança</div>
-    <div class="fg"><label class="fl">Tipo</label><select class="fi" id="pt"><option value="esc">🏢 Escritório</option><option value="cas">💑 Casal</option></select></div>
+    <div class="fg"><label class="fl">Tipo</label><select class="fi" id="pt"><option value="esc">🏢 Escritório</option><option value="cas">💑 Casal</option><option value="pes">👤 Pessoal</option></select></div>
     <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" type="number" id="pv" placeholder="0,00" inputmode="decimal"></div>
     <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="pdata" value="${today()}"></div>
     <button class="btn bp" onclick="savePoup()">✓ Salvar</button>`;
@@ -530,6 +584,8 @@ function savePoup(){
   const tipo=document.getElementById('pt').value;
   S.poupancas.push({id:uid(),tipo,val,data:document.getElementById('pdata').value});
   if(tipo==='esc')S.pesc_prox=Math.min(S.pesc_prox+40,500);
+  else if(tipo==='cas')S.pcas_prox=Math.min(S.pcas_prox+40,500);
+  // pessoal: sem progressão automática
   else S.pcas_prox=Math.min(S.pcas_prox+40,500);
   save();renderAll();closeM();
 }
@@ -547,7 +603,7 @@ document.getElementById('hsub').textContent=`${months[now.getMonth()]} de ${now.
 // Seed demo se vazio
 if(S.tx.length===0){
   S.tx=[
-    {id:uid(),tipo:'Receita',val:5800,desc:'Salário maio',cat:'Salário',data:today()},
+    {id:uid(),tipo:'Receita',val:5416.79,desc:'Salário maio',cat:'Salário',data:today()},
     {id:uid(),tipo:'Despesa',val:85,desc:'iFood - almoço',cat:'Restaurantes/iFood',data:today()},
     {id:uid(),tipo:'Despesa',val:18,desc:'Uber - trabalho',cat:'Transporte',data:today()},
   ];
