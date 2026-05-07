@@ -670,7 +670,6 @@ function rDividas(){
   const pc={'Alta':'var(--red)','Média':'var(--yel)','Baixa':'var(--grn)'};
   document.getElementById('div-list').innerHTML=S.dividas.map(d=>{
     const pct=d.parc>0&&d.meses>0?Math.min(100,((d.parc*d.meses-d.saldo)/(d.parc*d.meses))*100):0;
-    const editBtn=d.editavel?`<button onclick="editarDiv('${d.id}')" style="background:rgba(167,139,250,.15);border:1px solid var(--pur);border-radius:8px;padding:3px 9px;color:var(--pur);font-size:11px;cursor:pointer;font-family:inherit">✏️ Editar</button>`:'';
     const novaBadge=d.editavel?`<span style="font-size:10px;background:rgba(251,191,36,.2);color:var(--yel);padding:2px 6px;border-radius:99px;font-weight:700;margin-left:4px">A partir Jun</span>`:'';
     return`<div class="div-card">
       <div class="div-head">
@@ -680,7 +679,10 @@ function rDividas(){
       <div class="bt"><div class="bf" style="background:var(--pur);width:${pct}%"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px;align-items:center">
         <span style="font-size:10px;color:var(--t2)">${pct.toFixed(0)}% quitado</span>
-        <div style="display:flex;gap:6px">${editBtn}<button class="db" onclick="delDiv('${d.id}')">🗑</button></div>
+        <div style="display:flex;gap:6px">
+          <button onclick="editarDiv('${d.id}')" style="background:rgba(167,139,250,.15);border:1px solid var(--pur);border-radius:8px;padding:3px 9px;color:var(--pur);font-size:11px;cursor:pointer;font-family:inherit">✏️ Editar</button>
+          <button class="db" onclick="delDiv('${d.id}')">🗑</button>
+        </div>
       </div>
     </div>`;
   }).join('');
