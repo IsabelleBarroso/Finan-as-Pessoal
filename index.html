@@ -567,7 +567,12 @@ function txHTML(t){
   const m=METAS[t.cat]||{color:'#64748b',emoji:'📦'};
   const sign=t.tipo==='Receita'?'+':'-';
   const vc=t.tipo==='Receita'?'var(--grn)':'var(--red)';
-  return`<div class="txi" onclick="delTx('${t.id}')"><div class="txiw" style="background:${m.color}22">${m.emoji}</div><div class="txb"><div class="txd">${t.desc}</div><div class="txs">${t.cat} · ${fDate(t.data)}</div></div><div class="txv" style="color:${vc}">${sign}${fS(t.val)}</div></div>`;
+  return`<div class="txi">
+    <div class="txiw" style="background:${m.color}22">${m.emoji}</div>
+    <div class="txb"><div class="txd">${t.desc}</div><div class="txs">${t.cat} · ${fDate(t.data)}</div></div>
+    <div class="txv" style="color:${vc}">${sign}${fS(t.val)}</div>
+    <button class="db" style="margin-left:8px;flex-shrink:0" onclick="delTx('${t.id}')">🗑</button>
+  </div>`;
 }
 function rGastos(){
   document.getElementById('g-rec').textContent=fBRL(getRec());
@@ -831,9 +836,10 @@ function salvarEdicaoDiv(id){
   if(meses>0)d.meses=meses;
   save();rDividas();closeM();
 }
-function delPoup(id){if(!confirm('Remover?'))return;S.poupancas=S.poupancas.filter(p=>p.id!==id);save();rPoupanca()}
-function delSal(id){if(!confirm('Remover?'))return;S.salarios=S.salarios.filter(s=>s.id!==id);save();rSalario()}
-function delDiv(id){if(!confirm('Remover esta dívida?'))return;S.dividas=S.dividas.filter(d=>d.id!==id);save();rDividas()}
+function delTx(id){S.tx=S.tx.filter(t=>t.id!==id);save();rAll();}
+function delPoup(id){S.poupancas=S.poupancas.filter(p=>p.id!==id);save();rPoupanca();}
+function delSal(id){S.salarios=S.salarios.filter(s=>s.id!==id);save();rSalario();}
+function delDiv(id){S.dividas=S.dividas.filter(d=>d.id!==id);save();rDividas();}
 
 // ── TOGGLES ────────────────────────────────────────────────────────
 function toggleComp(id){
