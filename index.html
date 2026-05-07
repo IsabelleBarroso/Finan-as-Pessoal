@@ -217,6 +217,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
         </div>
       </div>
 
+      <div class="sh"><h2>💳 Gastos por Pagamento</h2></div>
+      <div class="card" id="pgto-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="pgto-grid">
+          <div style="text-align:center;color:var(--t2);font-size:12px;grid-column:1/-1">Nenhum gasto registrado ainda.</div>
+        </div>
+      </div>
+
       <div class="sh"><h2>🎯 Metas do mês</h2><a onclick="go('metas')">Ver tudo</a></div>
       <div class="card"><div id="metabars"></div></div>
 
@@ -562,6 +569,32 @@ function rInicio(){
 
   const recentes=[...S.tx].sort((a,b)=>b.data.localeCompare(a.data)).slice(0,5);
   document.getElementById('rec').innerHTML=recentes.length?recentes.map(txHTML).join(''):`<div class="emp"><div class="ei">📝</div><p>Nenhum lançamento ainda.<br>Toque em ＋ para começar!</p></div>`;
+
+  // Gastos por forma de pagamento
+  const pgtoTotals={};
+  S.tx.filter(t=>isMesSel(t.data)&&t.tipo==='Despesa'&&t.pgto).forEach(t=>{
+    pgtoTotals[t.pgto]=(pgtoTotals[t.pgto]||0)+t.val;
+  });
+  const pgtoColors={
+    '💳 Cartão BB':'#a78bfa',
+    '💳 Cartão Nubank Mãe':'#60a5fa',
+    '💳 Cartão Renner':'#f472b6',
+    '💵 Dinheiro':'#34d399',
+    '📱 PIX':'#fbbf24',
+    '🏦 Débito':'#fb923c',
+  };
+  const pgtoSorted=Object.entries(pgtoTotals).sort((a,b)=>b[1]-a[1]);
+  const pgtoGrid=document.getElementById('pgto-grid');
+  if(!pgtoSorted.length){
+    pgtoGrid.innerHTML='<div style="text-align:center;color:var(--t2);font-size:12px;grid-column:1/-1;padding:4px 0">Nenhum gasto com forma de pagamento registrada.</div>';
+  } else {
+    pgtoGrid.innerHTML=pgtoSorted.map(([pgto,val])=>`
+      <div style="background:var(--s2);border-radius:var(--rs);padding:10px;text-align:center">
+        <div style="font-size:11px;color:var(--t2);font-weight:600;margin-bottom:4px">${pgto}</div>
+        <div style="font-size:16px;font-weight:800;color:${pgtoColors[pgto]||'var(--pur)'}">${fBRL(val)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px">${gas>0?((val/gas)*100).toFixed(0)+'%':''}</div>
+      </div>`).join('');
+  }
 }
 
 // ── RENDER GASTOS DIÁRIOS ──────────────────────────────────────────
@@ -576,11 +609,13 @@ function txHTML(t){
   const m=METAS[t.cat]||{color:'#64748b',emoji:'📦'};
   const sign=t.tipo==='Receita'?'+':'-';
   const vc=t.tipo==='Receita'?'var(--grn)':'var(--red)';
+  const pgto=t.pgto?` · ${t.pgto}`:'';
   return`<div class="txi">
     <div class="txiw" style="background:${m.color}22">${m.emoji}</div>
-    <div class="txb"><div class="txd">${t.desc}</div><div class="txs">${t.cat} · ${fDate(t.data)}</div></div>
+    <div class="txb"><div class="txd">${t.desc}</div><div class="txs">${t.cat}${pgto} · ${fDate(t.data)}</div></div>
     <div class="txv" style="color:${vc}">${sign}${fS(t.val)}</div>
-    <button class="db" style="margin-left:8px;flex-shrink:0" onclick="delTx('${t.id}')">🗑</button>
+    <button class="db" style="margin-left:4px;flex-shrink:0" onclick="editTx('${t.id}')">✏️</button>
+    <button class="db" style="margin-left:4px;flex-shrink:0" onclick="delTx('${t.id}')">🗑</button>
   </div>`;
 }
 function rGastos(){
@@ -745,6 +780,7 @@ function openM(type){
     <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" type="number" id="tv" placeholder="0,00" step="0.01" inputmode="decimal"></div>
     <div class="fg"><label class="fl">Descrição</label><input class="fi" type="text" id="tdesc" placeholder="Ex: iFood, Uber, Salário…"></div>
     <div class="fg"><label class="fl">Categoria</label><select class="fi" id="tcat">${CATS_D.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div class="fg"><label class="fl">Forma de Pagamento</label><select class="fi" id="tpgto"><option>💳 Cartão BB</option><option>💳 Cartão Nubank Mãe</option><option>💳 Cartão Renner</option><option>💵 Dinheiro</option><option>📱 PIX</option><option>🏦 Débito</option></select></div>
     <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="tdata" value="${today()}"></div>
     <button class="btn btn-p" onclick="saveTx()">✓ Salvar Lançamento</button>`;
   } else if(type==='poup'){
@@ -788,7 +824,7 @@ function saveTx(){
   const desc=document.getElementById('tdesc').value.trim();
   if(!val||val<=0){alert('Informe um valor válido.');return;}
   if(!desc){alert('Informe uma descrição.');return;}
-  S.tx.push({id:uid(),tipo:document.getElementById('tt').value,val,desc,cat:document.getElementById('tcat').value,data:document.getElementById('tdata').value});
+  S.tx.push({id:uid(),tipo:document.getElementById('tt').value,val,desc,cat:document.getElementById('tcat').value,pgto:document.getElementById('tpgto').value,data:document.getElementById('tdata').value});
   save();rAll();closeM();
 }
 
@@ -844,6 +880,41 @@ function salvarEdicaoDiv(id){
   if(saldo>0)d.saldo=saldo;
   if(meses>0)d.meses=meses;
   save();rDividas();closeM();
+}
+function editTx(id){
+  const t=S.tx.find(t=>t.id===id);
+  if(!t)return;
+  const mc=document.getElementById('mc');
+  const pgtos=['💳 Cartão BB','💳 Cartão Nubank Mãe','💳 Cartão Renner','💵 Dinheiro','📱 PIX','🏦 Débito'];
+  mc.innerHTML=`<div class="mt">✏️ Editar Lançamento</div>
+    <div class="fg"><label class="fl">Descrição</label><input class="fi" type="text" id="et-desc" value="${t.desc}"></div>
+    <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" type="number" id="et-val" value="${t.val}" inputmode="decimal"></div>
+    <div class="fg"><label class="fl">Categoria</label>
+      <select class="fi" id="et-cat">
+        ${(t.tipo==='Despesa'?CATS_D:CATS_R).map(c=>`<option ${c===t.cat?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Forma de Pagamento</label>
+      <select class="fi" id="et-pgto">
+        <option value="">— Selecionar —</option>
+        ${pgtos.map(p=>`<option ${p===t.pgto?'selected':''}>${p}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="et-data" value="${t.data}"></div>
+    <button class="btn btn-p" onclick="saveEditTx('${id}')">✓ Salvar Alterações</button>`;
+  document.getElementById('ov').classList.add('open');
+  setTimeout(()=>{const f=document.querySelector('#modal input');if(f)f.focus();},200);
+}
+
+function saveEditTx(id){
+  const t=S.tx.find(t=>t.id===id);
+  if(!t)return;
+  t.desc=document.getElementById('et-desc').value.trim()||t.desc;
+  t.val=parseFloat(document.getElementById('et-val').value)||t.val;
+  t.cat=document.getElementById('et-cat').value;
+  t.pgto=document.getElementById('et-pgto').value||t.pgto;
+  t.data=document.getElementById('et-data').value;
+  save();rAll();closeM();
 }
 function delTx(id){S.tx=S.tx.filter(t=>t.id!==id);save();rAll();}
 function delPoup(id){S.poupancas=S.poupancas.filter(p=>p.id!==id);save();rPoupanca();}
