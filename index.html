@@ -181,6 +181,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
       <div><div class="hname">Olá, <em>Isabelle</em> 💜</div><div class="hmth" id="hmth"></div></div>
       <div class="hav">💜</div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;background:var(--s1);border:1px solid var(--bor);border-radius:var(--rs);padding:7px 12px">
+      <button onclick="mudarMes(-1)" style="background:none;border:none;color:var(--pur);font-size:20px;cursor:pointer;padding:0 6px;line-height:1">‹</button>
+      <div id="mes-sel-label" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--text)"></div>
+      <button onclick="mudarMes(1)" style="background:none;border:none;color:var(--pur);font-size:20px;cursor:pointer;padding:0 6px;line-height:1">›</button>
+    </div>
   </div>
 
   <div id="content">
@@ -437,9 +442,18 @@ function fS(v){const n=Number(v||0);if(Math.abs(n)>=1000)return'R$'+(n/1000).toF
 function fDate(iso){return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}
 function getMesAno(iso){const d=new Date(iso+'T12:00:00');return{m:d.getMonth(),y:d.getFullYear()}}
 function isMonth(iso){const n=new Date(),{m,y}=getMesAno(iso);return m===n.getMonth()&&y===n.getFullYear()}
-function getRec(){return S.tx.filter(t=>isMonth(t.data)&&t.tipo==='Receita').reduce((a,t)=>a+t.val,0)}
-function getGas(){return S.tx.filter(t=>isMonth(t.data)&&t.tipo==='Despesa').reduce((a,t)=>a+t.val,0)}
-function getCats(){const r={};S.tx.filter(t=>isMonth(t.data)&&t.tipo==='Despesa').forEach(t=>{r[t.cat]=(r[t.cat]||0)+t.val});return r}
+// Mês selecionado para o painel (0=Jan...11=Dez, -1=todos)
+let mesSel = new Date().getMonth();
+let anoSel = new Date().getFullYear();
+
+function isMesSel(iso){
+  const {m,y}=getMesAno(iso);
+  return m===mesSel && y===anoSel;
+}
+function getRec(){return S.tx.filter(t=>isMesSel(t.data)&&t.tipo==='Receita').reduce((a,t)=>a+t.val,0)}
+function getGas(){return S.tx.filter(t=>isMesSel(t.data)&&t.tipo==='Despesa').reduce((a,t)=>a+t.val,0)}
+function getCats(){const r={};S.tx.filter(t=>isMesSel(t.data)&&t.tipo==='Despesa').forEach(t=>{r[t.cat]=(r[t.cat]||0)+t.val});return r}
+function isMonth(iso){return isMesSel(iso)}
 function getPesc(){return S.poupancas.filter(p=>p.tipo==='esc').reduce((a,p)=>a+p.val,0)+S.pesc}
 function getPcas(){return S.poupancas.filter(p=>p.tipo==='cas').reduce((a,p)=>a+p.val,0)+S.pcas}
 function getPpes(){return S.poupancas.filter(p=>p.tipo==='pes').reduce((a,p)=>a+p.val,0)+S.ppes}
@@ -761,10 +775,22 @@ function togglePlano(id){S.plano_feito[id]=!S.plano_feito[id];save();rPlano()}
 
 function rAll(){rInicio();rGastos();rMensais();rSalario();rPoupanca();rDividas();rMetas();rPlano()}
 
+function atualizarMesSel(){
+  document.getElementById('mes-sel-label').textContent=MESES_PT[mesSel]+' / '+anoSel;
+}
+function mudarMes(dir){
+  mesSel+=dir;
+  if(mesSel>11){mesSel=0;anoSel++;}
+  if(mesSel<0){mesSel=11;anoSel--;}
+  atualizarMesSel();
+  rInicio();rGastos();rMetas();
+}
+
 // ── INIT ───────────────────────────────────────────────────────────
 load();
 const now=new Date();
-document.getElementById('hmth').textContent=MESES_PT[now.getMonth()]+' de '+now.getFullYear();
+document.getElementById('hmth').textContent='Maio de 2026';
+atualizarMesSel();
 rAll();
 </script>
 </body>
