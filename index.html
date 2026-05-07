@@ -186,6 +186,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
       <div id="mes-sel-label" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--text)"></div>
       <button onclick="mudarMes(1)" style="background:none;border:none;color:var(--pur);font-size:20px;cursor:pointer;padding:0 6px;line-height:1">›</button>
     </div>
+    <button onclick="diagnostico()" style="width:100%;margin-top:8px;padding:8px;background:rgba(251,191,36,.15);border:1px solid var(--yel);border-radius:var(--rs);color:var(--yel);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">🔍 Ver dados salvos no celular</button>
   </div>
 
   <div id="content">
@@ -429,15 +430,36 @@ let S={
 function save(){try{localStorage.setItem('isa_v4',JSON.stringify(S));}catch(e){}}
 function load(){
   try{
-    // Tenta carregar versão atual
-    let d=localStorage.getItem('isa_v4');
-    // Se não tem, tenta versões anteriores
-    if(!d) d=localStorage.getItem('isa_v3');
-    if(!d) d=localStorage.getItem('isa2');
-    if(!d) d=localStorage.getItem('isa_fp');
-    if(d){
-      const p=JSON.parse(d);
-      // Migrar dados antigos
+    // Busca em todas as chaves possíveis
+    const chaves=['isa_v4','isa_v3','isa2','isa_fp','financas','isabelle','fp_state'];
+    let dadosEncontrados=null;
+    let chaveEncontrada='';
+    
+    // Primeiro verifica todas as chaves do localStorage
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      chaves.push(key); // adiciona qualquer chave que existir
+    }
+    
+    // Tenta cada chave
+    for(const chave of [...new Set(chaves)]){
+      try{
+        const d=localStorage.getItem(chave);
+        if(d){
+          const p=JSON.parse(d);
+          // Verifica se tem dados de transações
+          if(p.tx&&p.tx.length>0){
+            dadosEncontrados=p;
+            chaveEncontrada=chave;
+            console.log('Dados encontrados na chave:',chave,'- tx:',p.tx.length);
+            break;
+          }
+        }
+      }catch(e){}
+    }
+    
+    if(dadosEncontrados){
+      const p=dadosEncontrados;
       if(p.tx) S.tx=p.tx;
       if(p.poupancas) S.poupancas=p.poupancas;
       if(p.salarios) S.salarios=p.salarios;
@@ -449,10 +471,15 @@ function load(){
       if(p.pcas_prox) S.pcas_prox=p.pcas_prox;
       if(p.comp_pago) S.comp_pago=p.comp_pago;
       if(p.plano_feito) S.plano_feito=p.plano_feito;
-      // Salva na chave nova
       save();
+      console.log('Dados migrados de:',chaveEncontrada);
+    } else {
+      console.log('Nenhum dado encontrado. Chaves no localStorage:');
+      for(let i=0;i<localStorage.length;i++){
+        console.log(' -',localStorage.key(i));
+      }
     }
-  }catch(e){}
+  }catch(e){console.log('Erro ao carregar:',e)}
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -795,6 +822,25 @@ function toggleComp(id){
 function togglePlano(id){S.plano_feito[id]=!S.plano_feito[id];save();rPlano()}
 
 function rAll(){rInicio();rGastos();rMensais();rSalario();rPoupanca();rDividas();rMetas();rPlano()}
+
+function diagnostico(){
+  let msg='📦 Chaves no celular:\n\n';
+  if(localStorage.length===0){
+    msg+='Nenhum dado encontrado!';
+  } else {
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);
+      try{
+        const d=JSON.parse(localStorage.getItem(key));
+        const txCount=d.tx?d.tx.length:0;
+        msg+=`• ${key}: ${txCount} lançamentos\n`;
+      }catch(e){
+        msg+=`• ${key}: (não é JSON)\n`;
+      }
+    }
+  }
+  alert(msg);
+}
 
 function atualizarMesSel(){
   document.getElementById('mes-sel-label').textContent=MESES_PT[mesSel]+' / '+anoSel;
