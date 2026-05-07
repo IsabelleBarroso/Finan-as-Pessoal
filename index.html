@@ -429,8 +429,29 @@ let S={
 function save(){try{localStorage.setItem('isa_v4',JSON.stringify(S));}catch(e){}}
 function load(){
   try{
-    const d=localStorage.getItem('isa_v4');
-    if(d){const p=JSON.parse(d);S={...S,...p};if(!p.dividas)S.dividas=S.dividas;}
+    // Tenta carregar versão atual
+    let d=localStorage.getItem('isa_v4');
+    // Se não tem, tenta versões anteriores
+    if(!d) d=localStorage.getItem('isa_v3');
+    if(!d) d=localStorage.getItem('isa2');
+    if(!d) d=localStorage.getItem('isa_fp');
+    if(d){
+      const p=JSON.parse(d);
+      // Migrar dados antigos
+      if(p.tx) S.tx=p.tx;
+      if(p.poupancas) S.poupancas=p.poupancas;
+      if(p.salarios) S.salarios=p.salarios;
+      if(p.dividas&&p.dividas.length) S.dividas=p.dividas;
+      if(p.pesc!==undefined) S.pesc=p.pesc;
+      if(p.pcas!==undefined) S.pcas=p.pcas;
+      if(p.ppes!==undefined) S.ppes=p.ppes;
+      if(p.pesc_prox) S.pesc_prox=p.pesc_prox;
+      if(p.pcas_prox) S.pcas_prox=p.pcas_prox;
+      if(p.comp_pago) S.comp_pago=p.comp_pago;
+      if(p.plano_feito) S.plano_feito=p.plano_feito;
+      // Salva na chave nova
+      save();
+    }
   }catch(e){}
 }
 
