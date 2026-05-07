@@ -185,6 +185,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
       <button onclick="mudarMes(-1)" style="background:none;border:none;color:var(--pur);font-size:20px;cursor:pointer;padding:0 6px;line-height:1">‹</button>
       <div id="mes-sel-label" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--text)"></div>
       <button onclick="mudarMes(1)" style="background:none;border:none;color:var(--pur);font-size:20px;cursor:pointer;padding:0 6px;line-height:1">›</button>
+      <div id="sync-dot" title="Sincronização" style="width:8px;height:8px;border-radius:50%;background:var(--yel);flex-shrink:0"></div>
     </div>
   </div>
 
@@ -370,7 +371,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit
   <div id="modal"><div class="mh"></div><div id="mc"></div></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+// ── FIREBASE ───────────────────────────────────────────────────────
+firebase.initializeApp({databaseURL:"https://isabelle-financas-default-rtdb.firebaseio.com"});
+const db=firebase.database();
+const REF=db.ref('isabelle');
+
 // ── CONSTANTES ─────────────────────────────────────────────────────
 const CATS_D=['Restaurantes/iFood','Supermercado/Mercado','Transporte','Saúde/Farmácia','Serviços/Assinaturas','Vestuário','Salão','Cosméticos','Lazer','Outros'];
 const CATS_R=['Salário','Renda Extra','Outros'];
@@ -427,39 +436,34 @@ let S={
 };
 
 // ── PERSISTENCE ────────────────────────────────────────────────────
-function save(){try{localStorage.setItem('isa_v4',JSON.stringify(S));}catch(e){}}
+
+// Indicador de sincronização
+function showSync(ok){
+  const el=document.getElementById('sync-dot');
+  if(el)el.style.background=ok?'var(--grn)':'var(--yel)';
+}
+
+function save(){
+  REF.set({
+    tx:S.tx,
+    poupancas:S.poupancas,
+    salarios:S.salarios,
+    dividas:S.dividas,
+    pesc:S.pesc,pcas:S.pcas,ppes:S.ppes,
+    pesc_prox:S.pesc_prox,pcas_prox:S.pcas_prox,
+    comp_pago:S.comp_pago,
+    plano_feito:S.plano_feito,
+  }).then(()=>showSync(true)).catch(()=>showSync(false));
+  // Salva também local como backup
+  try{localStorage.setItem('isa_backup',JSON.stringify(S));}catch(e){}
+}
+
 function load(){
-  try{
-    // Busca em todas as chaves possíveis
-    const chaves=['isa_v4','isa_v3','isa2','isa_fp','financas','isabelle','fp_state'];
-    let dadosEncontrados=null;
-    let chaveEncontrada='';
-    
-    // Primeiro verifica todas as chaves do localStorage
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
-      chaves.push(key); // adiciona qualquer chave que existir
-    }
-    
-    // Tenta cada chave
-    for(const chave of [...new Set(chaves)]){
-      try{
-        const d=localStorage.getItem(chave);
-        if(d){
-          const p=JSON.parse(d);
-          // Verifica se tem dados de transações
-          if(p.tx&&p.tx.length>0){
-            dadosEncontrados=p;
-            chaveEncontrada=chave;
-            console.log('Dados encontrados na chave:',chave,'- tx:',p.tx.length);
-            break;
-          }
-        }
-      }catch(e){}
-    }
-    
-    if(dadosEncontrados){
-      const p=dadosEncontrados;
+  // Mostra indicador carregando
+  showSync(false);
+  REF.once('value').then(snap=>{
+    const p=snap.val();
+    if(p){
       if(p.tx) S.tx=p.tx;
       if(p.poupancas) S.poupancas=p.poupancas;
       if(p.salarios) S.salarios=p.salarios;
@@ -471,15 +475,20 @@ function load(){
       if(p.pcas_prox) S.pcas_prox=p.pcas_prox;
       if(p.comp_pago) S.comp_pago=p.comp_pago;
       if(p.plano_feito) S.plano_feito=p.plano_feito;
-      save();
-      console.log('Dados migrados de:',chaveEncontrada);
-    } else {
-      console.log('Nenhum dado encontrado. Chaves no localStorage:');
-      for(let i=0;i<localStorage.length;i++){
-        console.log(' -',localStorage.key(i));
-      }
     }
-  }catch(e){console.log('Erro ao carregar:',e)}
+    showSync(true);
+    rAll();
+    atualizarMesSel();
+  }).catch(()=>{
+    // Fallback para localStorage se offline
+    try{
+      const d=localStorage.getItem('isa_backup');
+      if(d){const p=JSON.parse(d);Object.assign(S,p);}
+    }catch(e){}
+    showSync(false);
+    rAll();
+    atualizarMesSel();
+  });
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -888,11 +897,14 @@ function mudarMes(dir){
 }
 
 // ── INIT ───────────────────────────────────────────────────────────
-load();
-const now=new Date();
+// (inicialização feita após carregar Firebase abaixo)
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
 document.getElementById('hmth').textContent='Maio de 2026';
-atualizarMesSel();
-rAll();
+document.getElementById('mes-sel-label').textContent='Maio / 2026';
+load();
 </script>
 </body>
 </html>
